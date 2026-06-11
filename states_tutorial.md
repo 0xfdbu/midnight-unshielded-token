@@ -1,4 +1,4 @@
-📁 **Full Source Code:** [midnight-apps/unshielded-token](https://github.com/0xfdbu/midnight-apps/tree/main/unshielded-token)
+📁 **Full Source Code:** [midnight-apps/unshielded-token](https://github.com/0xfdbu/midnight-unshielded-token)
 
 **Target audience:** Developers
 
@@ -10,7 +10,7 @@
 - An existing Midnight DApp with a deployed smart contract
 - The smart contract compiled so its JS bindings exist (e.g., `/contracts/managed/<name>/contract/index.js`)
 - `INDEXER_HTTP` and `INDEXER_WS` constants pointing to the Preprod indexer
-- A [`package.json`](https://github.com/0xfdbu/midnight-apps/blob/main/unshielded-token/package.json) with the needed packages:
+- A [`package.json`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/package.json) with the needed packages:
   - `@midnight-ntwrk/midnight-js-indexer-public-data-provider`
   - `@midnight-ntwrk/midnight-js-contracts`
   - `@midnight-ntwrk/midnight-js-types`
@@ -43,7 +43,7 @@ Before you query anything, you need to know what you are querying.
 
 View the full `ContractState` reference in the [Midnight documentation](https://docs.midnight.network/api-reference/onchain-runtime/classes/ContractState).
 
-The ledger is defined in your `.compact` file. For the example [smart contract](https://github.com/0xfdbu/midnight-apps/blob/main/unshielded-token/contracts/Contract.compact) used in this tutorial (unshielded token vault), the ledger looks like this:
+The ledger is defined in your `.compact` file. For the example [smart contract](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/contracts/Contract.compact) used in this tutorial (unshielded token vault), the ledger looks like this:
 
 ```compact
 pragma language_version 0.22;
@@ -599,7 +599,7 @@ This is not limited to stablecoin vaults. Any smart contract that exposes `expor
 
 Now that you've finished this tutorial, here are a few things you can do next:
 
-- Check the full repository [source code](https://github.com/0xfdbu/midnight-apps/tree/main/unshielded-token)
+- Check the full repository [source code](https://github.com/0xfdbu/midnight-unshielded-token)
 - Deploy a hello-world contract and display ledger fields on a frontend
 - Read the Midnight Compact language docs
 - Understand `ContractState` from the [Midnight documentation](https://docs.midnight.network/api-reference/onchain-runtime/classes/ContractState)

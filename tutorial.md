@@ -1,4 +1,4 @@
-📁 **Full Source Code:** [midnight-apps/unshielded-token](https://github.com/0xfdbu/midnight-apps/tree/main/unshielded-token)
+📁 **Full Source Code:** [midnight-apps/unshielded-token](https://github.com/0xfdbu/midnight-unshielded-token)
 
 **Target audience:** Developers
 
@@ -7,7 +7,7 @@
 - Node.js installed (v20+)
 - A Midnight Wallet (e.g., 1AM or Lace)
 - Some Preprod [faucet](https://faucet.preprod.midnight.network/) NIGHT tokens
-- A [`package.json`](https://github.com/0xfdbu/midnight-apps/blob/main/unshielded-token/package.json) with the needed packages
+- A [`package.json`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/package.json) with the needed packages
   - `@midnight-ntwrk/compact-runtime`
   - `@midnight-ntwrk/dapp-connector-api`
   - `@midnight-ntwrk/ledger-v8`
@@ -29,11 +29,11 @@
 
 ![Wallet connection UI](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/iej2avrvzu0wic5jpmvq.png)
 
-Clone the [`dapp-connect`](https://github.com/0xfdbu/midnight-apps/tree/main/dapp-connect) project as a starting point. It includes wallet detection, connection, state polling, and the account modal — everything you need before adding smart contract operations.
+Clone the [`dapp-connect`](https://github.com/0xfdbu/midnight-dapp-connect) project as a starting point. It includes wallet detection, connection, state polling, and the account modal — everything you need before adding smart contract operations.
 
 ```bash
-git clone https://github.com/0xfdbu/midnight-apps.git
-cd midnight-apps/dapp-connect
+git clone https://github.com/0xfdbu/midnight-dapp-connect.git
+cd midnight-dapp-connect
 npm install
 npm run dev
 ```
@@ -87,7 +87,7 @@ export circuit receiveTokens(amount: Uint<128>): [] {
 }
 ```
 
-View the full smart contract code in [`Contract.compact`](https://github.com/0xfdbu/midnight-apps/blob/main/unshielded-token/contracts/Contract.compact) on GitHub.
+View the full smart contract code in [`Contract.compact`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/contracts/Contract.compact) on GitHub.
 
 ---
 
@@ -108,9 +108,9 @@ Then compile
 compact compile contracts/Contract.compact contracts/managed/stablecoin
 ```
 
-> **Note:** Skip this step if you want to clone the [unshielded-token repository](https://github.com/0xfdbu/midnight-apps/tree/main/unshielded-token). If you generate new keys, you need to redeploy because the old keys in this [path](https://github.com/0xfdbu/midnight-apps/tree/main/unshielded-token/contracts/managed/stablecoin/) would no longer be usable by the frontend. A smart contract is already deployed on Preprod: `0c0ad6d96daa1b983751db2149a093c34ea73714c33fbad40d291d9e887f8084`. Paste this into the dashboard contract selector or set it in localStorage as `unshielded_contract_address` to use it.
+> **Note:** Skip this step if you want to clone the [unshielded-token repository](https://github.com/0xfdbu/midnight-unshielded-token). If you generate new keys, you need to redeploy because the old keys in this [path](https://github.com/0xfdbu/midnight-unshielded-token/contracts/managed/stablecoin/) would no longer be usable by the frontend. A smart contract is already deployed on Preprod: `0c0ad6d96daa1b983751db2149a093c34ea73714c33fbad40d291d9e887f8084`. Paste this into the dashboard contract selector or set it in localStorage as `unshielded_contract_address` to use it.
 
-A simple approach to quickly deploy without waiting for wallet sync: use your existing wallet extension state via [Deploy.tsx](https://github.com/0xfdbu/midnight-apps/blob/main/unshielded-token/src/pages/Deploy.tsx) (highly recommended)
+A simple approach to quickly deploy without waiting for wallet sync: use your existing wallet extension state via [Deploy.tsx](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/src/pages/Deploy.tsx) (highly recommended)
 
 After this deployment this will set the deployed smart contract address in `localStorage`.
 
@@ -598,7 +598,7 @@ Midnight's multi-modal design is different from other networks that enforce a si
 
 Now that you have finished this tutorial, here are a few things you can do next:
 
-- Check the full repository [source code on GitHub](https://github.com/0xfdbu/midnight-apps/tree/main/unshielded-token)
+- Check the full repository [source code on GitHub](https://github.com/0xfdbu/midnight-unshielded-token)
 - Read the Midnight Compact language docs
 - Add authentication / allowlist for mint
 
