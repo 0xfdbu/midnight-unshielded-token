@@ -387,7 +387,7 @@ return () => subscription?.unsubscribe();
 
 The observable acts as a notification system. Whenever the indexer emits a message, call `fetchState()`, which in turn queries `getContractState(contractAddress)`, `getContractBalance(contractAddress, selectedTokenId)`, and `getUserTokenBalance(connectedApi, selectedTokenId)`.
 
-![Browser console showing `[useContractState] Observable: contract state changed, refetching`](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/36rglo0x9oaa3zs261w9.png)
+![Browser console showing `[useContractState] Observable: raw contractState emitted`](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/z7z4k4ioysti80rkc7qg.png)
 
 You can also use the emitted `ContractState` directly instead of refetching:
 
@@ -396,13 +396,15 @@ subscription = publicDataProvider
   .contractStateObservable(contractAddress, { type: 'latest' })
   .subscribe({
     next: (contractState) => {
+      console.log('[useContractState] Observable: raw contractState emitted', contractState);
+      console.log('[useContractState] Observable: contractState.balance', contractState.balance);
+
       const ledgerState = contractModule.ledger(contractState.data);
-      console.log('[useContractState] Direct ledger state:', {
+      console.log('[useContractState] Observable: deserialized ledger state', {
         totalSupply: ledgerState.totalSupply.toString(),
         totalBurned: ledgerState.totalBurned.toString(),
         burnedBalance: ledgerState.burnedBalance.toString(),
       });
-      console.log('[useContractState] Direct contract balance:', contractState.balance);
       // update state from ledgerState and contractState.balance
     },
     error: (err) => console.error(err),
