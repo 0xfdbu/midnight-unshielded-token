@@ -59,7 +59,7 @@ export function useContractState(
   }, [connectedApi, contractAddress, selectedTokenId]);
 
   // Initial fetch + polling fallback (also catches wallet-balance changes that the indexer stream misses)
- 
+
   useEffect(() => {
     if (!contractAddress) {
       setLoading(false);
@@ -71,7 +71,6 @@ export function useContractState(
     }, pollInterval);
     return () => clearInterval(id);
   }, [fetchState, pollInterval, contractAddress]);
-
 
   // Primary: indexer-backed contract state observable for push updates
   useEffect(() => {
