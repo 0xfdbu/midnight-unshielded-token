@@ -32,7 +32,7 @@ The increase comes from the new Project setup section, the Dependencies/version 
 
 **Before:**
 
-```markdown
+````markdown
 `@midnight-ntwrk/midnight-js-indexer-public-data-provider` exports `indexerPublicDataProvider`. It wraps an Apollo Client around the indexer's GraphQL V4 endpoint. It implements `PublicDataProvider` interface and gives you typed methods for querying chain data.
 
 The provider contains three useful methods for querying smart contract state:
@@ -44,11 +44,11 @@ The provider contains three useful methods for querying smart contract state:
 | `queryUnshieldedBalances(address)` | `UnshieldedBalances` | You only need the smart contract's native token balances |
 
 All three — `queryContractState(address)`, `queryZSwapAndContractState(address)`, and `queryUnshieldedBalances(address)` — accept an optional second argument to query at a specific block height or hash. If omitted, the latest state is returned.
-```
+````
 
 **After:**
 
-```markdown
+````markdown
 `@midnight-ntwrk/midnight-js-indexer-public-data-provider` exports `indexerPublicDataProvider`. It wraps an Apollo Client around the indexer's GraphQL V4 endpoint. It implements `PublicDataProvider` interface and gives you typed methods for querying chain data, **including streaming subscriptions**.
 
 The provider contains useful methods for querying smart contract state:
@@ -63,7 +63,7 @@ The provider contains useful methods for querying smart contract state:
 `queryContractState`, `queryZSwapAndContractState`, and `queryUnshieldedBalances` accept an optional second argument to query at a specific block height or hash. `contractStateObservable` accepts a config such as `{ type: 'latest' }`, `{ type: 'blockHeight', blockHeight: 42 }`, or `{ type: 'blockHash', blockHash: '...' }`.
 
 > **Why `contractStateObservable`?** It is the same `contractActions` GraphQL subscription you would open manually, but the provider manages the WebSocket handshake, reconnects, message parsing, and RxJS cleanup for you. The official Midnight bulletin-board UI uses this exact API.
-```
+````
 
 **Result:** The tutorial now teaches the supported SDK API and removes the false premise that raw WebSocket is required.
 
@@ -83,19 +83,19 @@ The provider contains useful methods for querying smart contract state:
 
 **Before:**
 
-```markdown
+````markdown
 Using `useEffect` for polling technically works, but it is inefficient for dashboards that need to stay up to date. The Midnight indexer exposes GraphQL subscriptions over WebSocket. `contractActions` emits an event every time your smart contract is called / deployed.
 
 `indexerPublicDataProvider` does not surface subscriptions directly, so open a raw WebSocket to the indexer and send a GraphQL `start` message to `wss://indexer.preprod.midnight.network/api/v4/graphql/ws`:
-```
+````
 
 **After:**
 
-```markdown
+````markdown
 Using `useEffect` for polling technically works, but it is inefficient for dashboards that need to stay up to date. The Midnight indexer exposes GraphQL subscriptions over WebSocket, and `indexerPublicDataProvider` wraps them in `contractStateObservable`. `contractActions` emits an event every time your smart contract is called or deployed.
 
 Create the provider, subscribe to the observable, and refetch state on every emission:
-```
+````
 
 ### Primary code block
 
@@ -218,7 +218,7 @@ useEffect(() => {
 
 The old raw WebSocket code is preserved in a new subsection:
 
-```markdown
+````markdown
 ### Under the hood: raw WebSocket
 
 `contractStateObservable` uses WebSocket under the hood. If you ever need to implement the same subscription without the provider — for example, in an environment where you cannot import `@midnight-ntwrk/midnight-js-indexer-public-data-provider` — the indexer accepts a raw WebSocket connection to `wss://indexer.preprod.midnight.network/api/v4/graphql/ws`.
@@ -255,7 +255,7 @@ ws.onmessage = (event) => {
   }
 };
 ```
-```
+````
 
 **Result:** `contractStateObservable` is now the primary path; raw WebSocket is preserved as a valuable reference rather than a replacement.
 
@@ -267,15 +267,15 @@ ws.onmessage = (event) => {
 
 **Before:**
 
-```markdown
+````markdown
 > **Note:** `graphql-ws` expects a `connection_init` before `start`, so if you use `subscriptions-transport-ws` (older protocol), the handshake is slightly different. The Preprod indexer supports `graphql-ws`.
-```
+````
 
 **After:**
 
-```markdown
+````markdown
 > **Protocol note:** The raw code above uses the **legacy `subscriptions-transport-ws` protocol**. Its WebSocket subprotocol string is confusingly `graphql-ws`, and its message vocabulary is `connection_init`, `start`, `data`, `ka` (keep-alive), and `stop`. The modern `graphql-ws` library uses a different subprotocol, `graphql-transport-ws`, and message types such as `subscribe`, `next`, and `complete`. The Midnight indexer accepts the legacy protocol shown here, which is why the hand-rolled code works. If you use a different GraphQL client, make sure you match the protocol it expects.
-```
+````
 
 **Result:** Readers will not be misdirected when debugging handshakes.
 
@@ -287,7 +287,7 @@ ws.onmessage = (event) => {
 
 ### Before: Package dump inside Prerequisites
 
-```markdown
+````markdown
 ## Prerequisites
 
 - Node.js installed (v20+)
@@ -300,11 +300,11 @@ ws.onmessage = (event) => {
   - `@midnight-ntwrk/midnight-js-indexer-public-data-provider`
   - `@midnight-ntwrk/midnight-js-contracts`
   - ... (long list)
-```
+````
 
 ### After: Short Prerequisites + Dependencies table
 
-```markdown
+````markdown
 ## Prerequisites
 
 - Node.js installed (v20+)
@@ -332,7 +332,7 @@ The project builds on the Midnight.js SDK. These packages handle the heavy lifti
 | `zustand` | — | State management |
 
 Run `npm install` to install them automatically. See [`package.json`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/package.json) for the full list.
-```
+````
 
 **Result:** Readers can reproduce the tutorial against exact, known-good package versions.
 
@@ -350,9 +350,9 @@ const [zswapState, contractState, ledgerParams] = result;
 
 ### New note added after the snippet
 
-```markdown
+````markdown
 > **Tuple-shape note:** The destructuring `const [zswapState, contractState, ledgerParams] = result` returns three elements in `@midnight-ntwrk/midnight-js-indexer-public-data-provider` **4.0.4**. Some other versions type the return as a two-tuple `[ZswapChainState, ContractState]`. If you see a type error or runtime mismatch, adjust the destructuring to match your installed version.
-```
+````
 
 **Result:** The three-tuple claim is now checkable against a stated version.
 
@@ -364,7 +364,7 @@ const [zswapState, contractState, ledgerParams] = result;
 
 ### New Section 2: Project setup
 
-```markdown
+````markdown
 ## Project setup
 
 Start with the standalone repository:
@@ -398,7 +398,7 @@ midnight-unshielded-token/
 ```
 
 Run the frontend with `npm run dev`.
-```
+````
 
 **Result:** The clone-and-follow path is now clear and matches the structure used in `midnight-attestation-dapp/tutorial.md`.
 
