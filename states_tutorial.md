@@ -397,6 +397,12 @@ subscription = publicDataProvider
   .subscribe({
     next: (contractState) => {
       const ledgerState = contractModule.ledger(contractState.data);
+      console.log('[useContractState] Direct ledger state:', {
+        totalSupply: ledgerState.totalSupply.toString(),
+        totalBurned: ledgerState.totalBurned.toString(),
+        burnedBalance: ledgerState.burnedBalance.toString(),
+      });
+      console.log('[useContractState] Direct contract balance:', contractState.balance);
       // update state from ledgerState and contractState.balance
     },
     error: (err) => console.error(err),
