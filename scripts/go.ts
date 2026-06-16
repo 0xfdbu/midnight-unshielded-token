@@ -31,12 +31,12 @@ import * as Rx from 'rxjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const NETWORK = 'preview';
+const NETWORK = 'preprod';
 
 const CONFIG = {
-  indexer: 'https://indexer.preview.midnight.network/api/v4/graphql',
-  indexerWS: 'wss://indexer.preview.midnight.network/api/v4/graphql/ws',
-  node: 'https://rpc.preview.midnight.network',
+  indexer: 'https://indexer.preprod.midnight.network/api/v4/graphql',
+  indexerWS: 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws',
+  node: 'https://rpc.preprod.midnight.network',
   proofServer: 'http://127.0.0.1:6300',
   privateStateStoreName: 'stablecoin',
 };

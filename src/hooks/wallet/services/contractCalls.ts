@@ -8,7 +8,7 @@ import {
 import { uint8ArrayToHex, hexToUint8Array } from '../../../lib/utils';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 
-setNetworkId('preview');
+setNetworkId('preprod');
 
 let cachedModules: any = null;
 
@@ -263,7 +263,7 @@ export async function encodeUserAddress(bech32Address: string): Promise<Uint8Arr
   
   try {
     const parsed = MidnightBech32m.parse(bech32Address);
-    const decoded: any = parsed.decode(UnshieldedAddress, 'preview');
+    const decoded: any = parsed.decode(UnshieldedAddress, 'preprod');
     return decoded.data;
   } catch (e) {
     console.error('[encodeUserAddress] Error:', e);

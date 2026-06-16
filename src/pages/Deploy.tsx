@@ -16,7 +16,7 @@ import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { Transaction, CostModel } from '@midnight-ntwrk/ledger-v8';
 
-setNetworkId('preview');
+setNetworkId('preprod');
 
 const STORE_NAME = 'stablecoin-state-v2';
 const STORAGE_PASSWORD = 'TokenTransfer-2026!#MidnightApp';
