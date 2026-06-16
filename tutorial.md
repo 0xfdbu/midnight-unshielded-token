@@ -141,7 +141,7 @@ Set up the smart contract providers
 - `walletProvider`: handles `balanceTx` via `connectedApi.balanceUnsealedTransaction`
 - `midnightProvider`: submits transactions via `connectedApi.submitTransaction`
 
-> **Note:** In this tutorial, the providers are rebuilt in every function. In a production environment, initialize them once and reuse them across all operations.
+> **Note:** In this tutorial, the providers are rebuilt in every function. In a production environment, initialise them once and reuse them across all operations.
 
 The function below covers the full lifecycle of minting into the vault smart contract. The UI calls the store method `useWalletStore.getState().mintToContract(BigInt(amount))`, which wraps the service function shown below.
 
@@ -426,7 +426,7 @@ if (!contractState) {
 }
 ```
 
-**2. Deserialize into typed ledger state**
+**2. Deserialise into typed ledger state**
 
 The indexer returns raw bytes. Import the smart contract module and pass the raw data through `ledger()` to get typed fields like `totalSupply` and `totalBurned`.
 

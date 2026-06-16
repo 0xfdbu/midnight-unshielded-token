@@ -637,7 +637,7 @@ export function useContractState(
 - Added `indexerPublicDataProvider` and `Subscription` from `rxjs`.
 - Added `INDEXER_HTTP` import because the provider needs both HTTP and WS URLs.
 - Added `CONTRACT_PATH` import for deserializing the emitted `ContractState`.
-- The observable `next` handler now receives `contractState` and logs it raw, its balance, and its deserialized ledger fields before calling `fetchState()`.
+- The observable `next` handler now receives `contractState` and logs it raw, its balance, and its deserialised ledger fields before calling `fetchState()`.
 - Cleanup is a single `subscription?.unsubscribe()`.
 
 ### `src/pages/Home.tsx`

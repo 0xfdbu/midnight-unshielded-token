@@ -6,7 +6,7 @@
 
 ## Summary
 
-This guide shows how to query and visualize deployed smart contract state from a React frontend on the Midnight network. You will learn how to use `indexerPublicDataProvider` for GraphQL queries, how to deserialize ledger state into typed fields, and how to render everything in the frontend.
+This guide shows how to query and visualize deployed smart contract state from a React frontend on the Midnight network. You will learn how to use `indexerPublicDataProvider` for GraphQL queries, how to deserialise ledger state into typed fields, and how to render everything in the frontend.
 
 You will end up with a reusable `useContractState` hook that keeps your frontend in sync with on-chain state. The hook uses `indexerPublicDataProvider.contractStateObservable(...)` as its primary push-based update mechanism, with a polling fallback for data the indexer stream does not capture. This works with any smart contract that you have previously deployed; the example presented below is an unshielded stablecoin vault, but the patterns apply to any Midnight DApp needing to display on-chain data.
 
@@ -286,7 +286,7 @@ console.log('[ContractState] Ledger totalSupply:', ledgerState.totalSupply.toStr
 console.log('[ContractState] Ledger totalBurned:', ledgerState.totalBurned.toString());
 ```
 
-![Console output showing deserialized ledger field values](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/4hmdjhmr23g9tvrdlsio.png)
+![Console output showing deserialised ledger field values](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/4hmdjhmr23g9tvrdlsio.png)
 
 ---
 
@@ -349,7 +349,7 @@ export function HomePage() {
 
 The hook returns `null` while loading, so the frontend does not crash and uses `?? 0n` as a fallback. The grid uses `grid-cols-2` on mobile and `grid-cols-4` on larger screens. The vault balance shows held burned tokens, so users know the raw balance includes burned tokens. 
 
-You can use this pattern with any other smart contract; all that changes are the ledger fields you deserialize and the token auto-detected from the smart contract's balance map.
+You can use this pattern with any other smart contract; all that changes are the ledger fields you deserialise and the token auto-detected from the smart contract's balance map.
 
 
 ![Dashboard showing four stat cards: Total Supply, Total Burned, Vault Balance, and Wallet Balance](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ddhtg8c5d28fyn4j7m06.png)
@@ -581,9 +581,9 @@ The hybrid approach used in `useContractState` is robust: it uses a background p
 
 ## Conclusion
 
-You now have a complete pipeline for querying smart contract state from a React/TypeScript frontend on the Midnight network. The pattern is always the same: build an `indexerPublicDataProvider`, call the query method that works for your needs, deserialize the ledger state with your compiled smart contract's `ledger()` constructor, and render the fields in your UI.
+You now have a complete pipeline for querying smart contract state from a React/TypeScript frontend on the Midnight network. The pattern is always the same: build an `indexerPublicDataProvider`, call the query method that works for your needs, deserialise the ledger state with your compiled smart contract's `ledger()` constructor, and render the fields in your UI.
 
-This is not limited to stablecoin vaults. Any smart contract that exposes `export ledger` fields can be queried the same way. You only need to change the ledger fields you choose to deserialize, for example `totalSupply` or `totalEmployees`, and the tokens auto-detected from the smart contract's balance map.
+This is not limited to stablecoin vaults. Any smart contract that exposes `export ledger` fields can be queried the same way. You only need to change the ledger fields you choose to deserialise, for example `totalSupply` or `totalEmployees`, and the tokens auto-detected from the smart contract's balance map.
 
 ---
 
