@@ -31,7 +31,7 @@ function App() {
         console.log('[App] Auto-reconnecting to:', lastWalletId);
         setWallet(matchingWallet as any);
         try {
-          await connect('preprod');
+          await connect('preview');
         } catch (err) {
           console.log('[App] Auto-reconnect failed:', err);
           localStorage.removeItem(LAST_WALLET_KEY);

@@ -68,7 +68,7 @@ const ledgerState = contractModule.ledger(contractState.data);
 
 ## 1. The indexer provider
 
-`@midnight-ntwrk/midnight-js-indexer-public-data-provider` exports `indexerPublicDataProvider`. It wraps an Apollo Client around the indexer's GraphQL V4 endpoint. It implements `PublicDataProvider` interface and gives you typed methods for querying chain data.
+`@midnight-ntwrk/midnight-js-indexer-public-data-provider` exports `indexerPublicDataProvider`. It wraps an Apollo Client around the indexer's GraphQL V4 endpoint. It implements `PublicDataProvider` interface and gives you typed methods for querying chain data, **including streaming subscriptions**.
 
 ```typescript
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
@@ -79,15 +79,18 @@ const provider = indexerPublicDataProvider(
 );
 ```
 
-The provider contains three useful methods for querying smart contract state:
+The provider contains useful methods for querying smart contract state:
 
 | Method | Returns | Use when |
 |---|---|---|
 | `queryContractState(address)` | `ContractState` | You only need the smart contract's public ledger data |
 | `queryZSwapAndContractState(address)` | `[ZswapChainState, ContractState, LedgerParameters]` | You also need the global shielded state or parameters |
 | `queryUnshieldedBalances(address)` | `UnshieldedBalances` | You only need the smart contract's native token balances |
+| `contractStateObservable(address, config)` | `Observable<ContractState>` | You want push-driven updates when the contract changes |
 
-All three — `queryContractState(address)`, `queryZSwapAndContractState(address)`, and `queryUnshieldedBalances(address)` — accept an optional second argument to query at a specific block height or hash. If omitted, the latest state is returned.
+`queryContractState`, `queryZSwapAndContractState`, and `queryUnshieldedBalances` accept an optional second argument to query at a specific block height or hash. `contractStateObservable` accepts a config such as `{ type: 'latest' }`, `{ type: 'blockHeight', blockHeight: 42 }`, or `{ type: 'blockHash', blockHash: '...' }`.
+
+> **Why `contractStateObservable`?** It is the same `contractActions` GraphQL subscription you would open manually, but the provider manages the WebSocket handshake, reconnects, message parsing, and RxJS cleanup for you. The official Midnight bulletin-board UI uses this exact API.
 
 ---
 
@@ -309,88 +312,72 @@ You can use this pattern with any other smart contract; all that changes are the
 
 ---
 
-## 6. Real-time updates with WebSocket subscriptions
+## 6. Real-time updates with `contractStateObservable`
 
-Using `useEffect` for polling technically works, but it is inefficient for dashboards that need to stay up to date. The Midnight indexer exposes GraphQL subscriptions over WebSocket. `contractActions` emits an event every time your smart contract is called / deployed.
+Using `useEffect` for polling technically works, but it is inefficient for dashboards that need to stay up to date. The Midnight indexer exposes GraphQL subscriptions over WebSocket, and `indexerPublicDataProvider` wraps them in `contractStateObservable`. `contractActions` emits an event every time your smart contract is called or deployed.
 
-`indexerPublicDataProvider` does not surface subscriptions directly, so open a raw WebSocket to the indexer and send a GraphQL `start` message to `wss://indexer.preprod.midnight.network/api/v4/graphql/ws`:
-
-```typescript
-const INDEXER_WS = 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws';
-
-      ws = new WebSocket(INDEXER_WS, 'graphql-ws');
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        console.log('[useContractState] Socket: connected');
-        reconnectDelay = 1000; // Reset backoff on successful connection
-        ws!.send(JSON.stringify({ type: 'connection_init' }));
-        ws!.send(JSON.stringify({
-          id: 'contract-state-sub',
-          type: 'start',
-          payload: {
-            query: `
-              subscription ContractStateUpdates($address: HexEncoded!) {
-                contractActions(address: $address) {
-                  state
-                  transaction { block { height } }
-                }
-              }
-            `,
-            variables: { address: contractAddress },
-          },
-        }));
-      };
-```
-
-The WebSocket acts as a notification system. Whenever the indexer emits a message, call `fetchState()`, which in turn queries `getContractState(contractAddress)`, `getContractBalance(contractAddress, selectedTokenId)`, and `getUserTokenBalance(connectedApi, selectedTokenId)`.
+Create the provider, subscribe to the observable, and refetch state on every emission:
 
 ```typescript
-  const fetchState = useCallback(async () => {
-    if (!contractAddress) {
-      setState(null);
-      setLoading(false);
-      return;
-    }
-    try {
-      const [s, cb, wb] = await Promise.all([
-        getContractState(contractAddress),
-        selectedTokenId ? getContractBalance(contractAddress, selectedTokenId) : Promise.resolve(0n),
-        connectedApi && selectedTokenId ? getUserTokenBalance(connectedApi, selectedTokenId) : Promise.resolve(0n),
-      ]);
-      // Usable contract balance = raw balance minus tokens that were burned into the contract
-      const usableContractBalance = cb > s.burnedBalance ? cb - s.burnedBalance : 0n;
-      setState({
-        totalSupply: s.totalSupply,
-        totalBurned: s.totalBurned,
-        burnedBalance: s.burnedBalance,
-        contractBalance: usableContractBalance,
-        walletBalance: wb,
-      });
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [connectedApi, contractAddress, selectedTokenId]);
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import { Subscription } from 'rxjs';
+
+const publicDataProvider = indexerPublicDataProvider(INDEXER_HTTP, INDEXER_WS);
+
+let subscription: Subscription;
+try {
+  subscription = publicDataProvider
+    .contractStateObservable(contractAddress, { type: 'latest' })
+    .subscribe({
+      next: () => {
+        console.log('[useContractState] Observable: contract state changed, refetching');
+        fetchState();
+      },
+      error: (err) => console.error('[useContractState] Observable error:', err),
+    });
+} catch (err: any) {
+  console.error('[useContractState] Failed to start observable:', err);
+}
+
+// Cleanup on unmount
+return () => subscription?.unsubscribe();
 ```
+
+The observable acts as a notification system. Whenever the indexer emits a message, call `fetchState()`, which in turn queries `getContractState(contractAddress)`, `getContractBalance(contractAddress, selectedTokenId)`, and `getUserTokenBalance(connectedApi, selectedTokenId)`.
+
+![Browser console showing `[useContractState] Observable: contract state changed, refetching`](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/36rglo0x9oaa3zs261w9.png)
+
+You can also use the emitted `ContractState` directly instead of refetching:
+
+```typescript
+subscription = publicDataProvider
+  .contractStateObservable(contractAddress, { type: 'latest' })
+  .subscribe({
+    next: (contractState) => {
+      const ledgerState = contractModule.ledger(contractState.data);
+      // update state from ledgerState and contractState.balance
+    },
+    error: (err) => console.error(err),
+  });
+```
+
+The `fetchState()` pattern is kept in this project's hook because the wallet balance is not part of the contract state observable, so one query per update is still needed to refresh all four stat cards.
 
 ### The `useContractState` hook
 
-This project implements the full pattern in `src/hooks/useContractState.ts`. It combines polling with a WebSocket subscription, falling back to polling every 15 seconds if the WebSocket drops.
+This project implements the full pattern in `src/hooks/useContractState.ts`. It uses `contractStateObservable` as the primary push layer and falls back to polling every 15 seconds for wallet-balance changes that the indexer stream does not capture.
 
 ```typescript
-import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  INDEXER_WS,
-} from './wallet/wallet.constants';
+import { useState, useEffect, useCallback } from 'react';
+import { INDEXER_HTTP, INDEXER_WS } from './wallet/wallet.constants';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import {
   getContractState,
   getContractBalance,
   getUserTokenBalance,
 } from './wallet/services/contractCalls';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { Subscription } from 'rxjs';
 
 export interface ContractStateSnapshot {
   totalSupply: bigint;
@@ -411,10 +398,6 @@ export function useContractState(
   const [state, setState] = useState<ContractStateSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastBlockRef = useRef<number | undefined>(undefined);
-  const intentionalCloseRef = useRef(new WeakSet<WebSocket>());
 
   const fetchState = useCallback(async () => {
     if (!contractAddress) {
@@ -445,132 +428,89 @@ export function useContractState(
     }
   }, [connectedApi, contractAddress, selectedTokenId]);
 
-  // Initial fetch + polling fallback
+  // Initial fetch + polling fallback (also catches wallet-balance changes the indexer stream misses)
   useEffect(() => {
-    if (!connectedApi || !contractAddress) {
+    if (!contractAddress) {
       setLoading(false);
       return;
     }
-    console.log('[useContractState] Polling: fetching state...');
     fetchState();
-    const id = setInterval(() => {
-      console.log('[useContractState] Polling: interval tick');
-      fetchState();
-    }, pollInterval);
+    const id = setInterval(() => fetchState(), pollInterval);
     return () => clearInterval(id);
-  }, [fetchState, pollInterval, connectedApi, contractAddress, selectedTokenId]);
+  }, [fetchState, pollInterval, contractAddress]);
 
-  // WebSocket subscription for push updates
+  // Primary: indexer-backed contract state observable for push updates
   useEffect(() => {
-    if (!connectedApi || !contractAddress) return;
-
-    let ws: WebSocket | null = null;
-    let reconnectDelay = 1000;
-    const maxReconnectDelay = 30000;
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    const DEBOUNCE_MS = 500;
-
-    function connect() {
-      ws = new WebSocket(INDEXER_WS, 'graphql-ws');
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        console.log('[useContractState] Socket: connected');
-        reconnectDelay = 1000; // Reset backoff on successful connection
-        ws!.send(JSON.stringify({ type: 'connection_init' }));
-        ws!.send(JSON.stringify({
-          id: 'contract-state-sub',
-          type: 'start',
-          payload: {
-            query: `
-              subscription ContractStateUpdates($address: HexEncoded!) {
-                contractActions(address: $address) {
-                  state
-                  transaction { block { height } }
-                }
-              }
-            `,
-            variables: { address: contractAddress },
-          },
-        }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === 'data' && msg.payload?.data?.contractActions) {
-            const action = msg.payload.data.contractActions;
-            const blockHeight = action.transaction?.block?.height;
-            if (blockHeight && blockHeight !== lastBlockRef.current) {
-              lastBlockRef.current = blockHeight;
-              // Debounce: the indexer sends a backlog of historical actions on connect.
-              // Wait for the flood to stop before fetching, so 150 messages become 1 fetch.
-              if (debounceTimer) clearTimeout(debounceTimer);
-              debounceTimer = setTimeout(() => {
-                console.log('[useContractState] Socket: debounced fetch for block', blockHeight);
-                fetchState();
-                debounceTimer = null;
-              }, DEBOUNCE_MS);
-            }
-          }
-          if (msg.type === 'ka') {
-            // Keep-alive, ignore
-          }
-        } catch (e) {
-          console.error('[useContractState] Failed to parse message:', e);
-        }
-      };
-
-      ws.onerror = (err) => {
-        // Suppress errors from intentional closes (React Strict Mode cleanup)
-        if (ws && intentionalCloseRef.current.has(ws)) return;
-        console.error('[useContractState] WebSocket error:', err);
-      };
-
-      ws.onclose = () => {
-        if (ws && intentionalCloseRef.current.has(ws)) {
-          console.log('[useContractState] Socket: closed intentionally');
-          return;
-        }
-        console.log(`[useContractState] Socket: disconnected, reconnecting in ${reconnectDelay}ms...`);
-        if (reconnectRef.current) clearTimeout(reconnectRef.current);
-        reconnectRef.current = setTimeout(() => {
-          reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
-          connect();
-        }, reconnectDelay);
-      };
+    if (!contractAddress) {
+      setLoading(false);
+      return;
     }
 
-    connect();
+    const publicDataProvider = indexerPublicDataProvider(INDEXER_HTTP, INDEXER_WS);
+    let subscription: Subscription;
 
-    return () => {
-      if (reconnectRef.current) {
-        clearTimeout(reconnectRef.current);
-        reconnectRef.current = null;
-      }
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-        debounceTimer = null;
-      }
-      if (ws) {
-        intentionalCloseRef.current.add(ws);
-        if (ws.readyState === WebSocket.OPEN) {
-          try { ws.send(JSON.stringify({ id: 'contract-state-sub', type: 'stop' })); } catch {}
-          ws.close();
-        }
-        // If the socket is still CONNECTING (common in React Strict Mode),
-        // do not call close(). The browser will clean it up, and calling
-        // close() on a CONNECTING socket produces a console warning.
-      }
-    };
-  }, [connectedApi, fetchState, contractAddress, selectedTokenId]);
+    try {
+      subscription = publicDataProvider
+        .contractStateObservable(contractAddress, { type: 'latest' })
+        .subscribe({
+          next: () => {
+            console.log('[useContractState] Observable: contract state changed, refetching');
+            fetchState();
+          },
+          error: (err) => console.error('[useContractState] Observable error:', err),
+        });
+    } catch (err: any) {
+      console.error('[useContractState] Failed to start observable:', err);
+      setError(err.message);
+      setLoading(false);
+      return;
+    }
+
+    return () => subscription?.unsubscribe();
+  }, [contractAddress, fetchState]);
 
   return { state, loading, error, refetch: fetchState };
 }
-
 ```
 
-If you want to enable/disable polling fallback, simply comment or uncomment the polling part.
+If you want to enable or disable polling fallback, simply comment or uncomment the polling `useEffect`.
+
+### Under the hood: raw WebSocket
+
+`contractStateObservable` uses WebSocket under the hood. If you ever need to implement the same subscription without the provider — for example, in an environment where you cannot import `@midnight-ntwrk/midnight-js-indexer-public-data-provider` — the indexer accepts a raw WebSocket connection to `wss://indexer.preprod.midnight.network/api/v4/graphql/ws`.
+
+```typescript
+const ws = new WebSocket(INDEXER_WS, 'graphql-ws');
+
+ws.onopen = () => {
+  ws.send(JSON.stringify({ type: 'connection_init' }));
+  ws.send(JSON.stringify({
+    id: 'contract-state-sub',
+    type: 'start',
+    payload: {
+      query: `
+        subscription ContractStateUpdates($address: HexEncoded!) {
+          contractActions(address: $address) {
+            state
+            transaction { block { height } }
+          }
+        }
+      `,
+      variables: { address: contractAddress },
+    },
+  }));
+};
+
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+  if (msg.type === 'data' && msg.payload?.data?.contractActions) {
+    fetchState();
+  }
+  if (msg.type === 'ka') {
+    // keep-alive, ignore
+  }
+};
+```
 
 > **Note:** `graphql-ws` expects a `connection_init` before `start`, so if you use `subscriptions-transport-ws` (older protocol), the handshake is slightly different. The Preprod indexer supports `graphql-ws`.
 

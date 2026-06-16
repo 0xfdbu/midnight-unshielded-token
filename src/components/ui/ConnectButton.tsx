@@ -56,7 +56,7 @@ export function ConnectButton() {
   const handleConnect = async (selectedWallet: InitialAPI) => {
     setWallet(selectedWallet);
     setShowModal(false);
-    await connect('preprod');
+    await connect('preview');
   };
 
   const handleClick = () => {
