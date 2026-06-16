@@ -1,4 +1,4 @@
-# [Tutorial] Reading and Reacting to Contract State from a Frontend on Midnight network
+# [Tutorial] Reading and reacting to smart contract state from a frontend on Midnight network
 
 📁 **Full Source Code:** [midnight-unshielded-token](https://github.com/0xfdbu/midnight-unshielded-token)
 
