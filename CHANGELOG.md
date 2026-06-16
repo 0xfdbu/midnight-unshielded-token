@@ -486,6 +486,20 @@ next: async (contractState) => {
 
 ---
 
+## 10. Other minor wording and formatting changes
+
+The following smaller changes were also made and are visible in the full `diff -u` output:
+
+| Location | Before | After |
+|---|---|---|
+| Section order | `Prerequisites` → `Summary` | `Summary` → `Project setup` → `Prerequisites` → `Dependencies` |
+| Section 6 intro | `called / deployed` | `called or deployed` |
+| Polling note | `If you want to enable/disable polling fallback` | `If you want to enable or disable polling fallback` |
+| Prerequisites | `A Midnight Wallet (e.g., 1AM or Lace)` | `A Midnight wallet extension (e.g., 1AM or Lace)` |
+| Prerequisites | — | Added `Git` |
+
+---
+
 ## Files changed
 
 - `states_tutorial.md` — comprehensive refactor
