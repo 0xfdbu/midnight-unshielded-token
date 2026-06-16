@@ -2,47 +2,73 @@
 
 **Target audience:** Developers
 
-## Prerequisites
-
-- Node.js installed (v20+)
-- A Midnight Wallet (e.g., 1AM or Lace)
-- Some Preprod [faucet](https://faucet.preprod.midnight.network/) NIGHT tokens
-- An existing Midnight DApp with a deployed smart contract
-- The smart contract compiled so its JS bindings exist (e.g., `/contracts/managed/<name>/contract/index.js`)
-- `INDEXER_HTTP` and `INDEXER_WS` constants pointing to the Preprod indexer
-- A [`package.json`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/package.json) with the needed packages:
-  - `@midnight-ntwrk/midnight-js-indexer-public-data-provider`
-  - `@midnight-ntwrk/midnight-js-contracts`
-  - `@midnight-ntwrk/midnight-js-types`
-  - `@midnight-ntwrk/compact-runtime`
-  - `@midnight-ntwrk/dapp-connector-api`
-  - `@midnight-ntwrk/ledger-v8`
-  - `@midnight-ntwrk/midnight-js-fetch-zk-config-provider`
-
-  - `@midnight-ntwrk/midnight-js-level-private-state-provider`
-  - `@midnight-ntwrk/midnight-js-network-id`
-  - `react`, `react-dom`, `react-router-dom`
-  - `zustand`
-
-> **Version note:** This tutorial was written against the following exact package versions. If you are on a different release, some return types may differ.
->
-> | Package | Version |
-> |---|---|
-> | `@midnight-ntwrk/midnight-js-indexer-public-data-provider` | `4.0.4` |
-> | `@midnight-ntwrk/midnight-js-contracts` | `4.0.4` |
-> | `@midnight-ntwrk/midnight-js-types` | `4.0.4` |
-> | `@midnight-ntwrk/midnight-js-fetch-zk-config-provider` | `4.0.4` |
-> | `@midnight-ntwrk/midnight-js-level-private-state-provider` | `4.0.4` |
-> | `@midnight-ntwrk/midnight-js-network-id` | `4.0.4` |
-> | `@midnight-ntwrk/dapp-connector-api` | `4.0.1` |
-> | `@midnight-ntwrk/compact-runtime` | `0.15.0` |
-> | `@midnight-ntwrk/ledger-v8` | `8.0.3` |
-
 ## Summary
 
 This guide shows how to query and visualize deployed smart contract state from a React frontend on the Midnight network. You will learn how to use `indexerPublicDataProvider` for GraphQL queries, how to deserialize ledger state into typed fields, and how to render everything in the frontend.
 
-You have a reusable `useContractState` hook that keeps your frontend in sync with on-chain state, whether you prefer polling or push-based subscriptions over WebSocket. This works with any smart contract that you have previously deployed; the example presented below is an unshielded stablecoin vault, but the patterns apply to any Midnight DApp needing to display on-chain data.
+You will end up with a reusable `useContractState` hook that keeps your frontend in sync with on-chain state. The hook uses `indexerPublicDataProvider.contractStateObservable(...)` as its primary push-based update mechanism, with a polling fallback for data the indexer stream does not capture. This works with any smart contract that you have previously deployed; the example presented below is an unshielded stablecoin vault, but the patterns apply to any Midnight DApp needing to display on-chain data.
+
+## Project setup
+
+Start with the standalone repository:
+
+```bash
+git clone https://github.com/0xfdbu/midnight-unshielded-token.git
+cd midnight-unshielded-token
+npm install
+```
+
+The finished project structure looks like this:
+
+```text
+midnight-unshielded-token/
+├── contracts/
+│   └── Contract.compact                 # Example unshielded token vault contract
+├── scripts/
+│   └── go.ts                            # Deployment helper
+├── src/
+│   ├── hooks/
+│   │   ├── useContractState.ts          # Real-time contract-state hook
+│   │   └── wallet/
+│   │       ├── wallet.constants.ts      # Indexer / network constants
+│   │       └── services/
+│   │           └── contractCalls.ts     # Query helpers
+│   ├── components/
+│   └── App.tsx
+├── package.json
+├── states_tutorial.md                   # This guide
+└── tutorial.md                          # Deploy-and-run guide
+```
+
+Run the frontend with `npm run dev`.
+
+## Prerequisites
+
+- Node.js installed (v20+)
+- Git
+- A Midnight wallet extension (e.g., 1AM or Lace)
+- Some Preprod [faucet](https://faucet.preprod.midnight.network/) NIGHT tokens
+- A deployed Midnight smart contract (the repo includes one you can deploy, or you can use your own)
+
+## Dependencies
+
+The project builds on the Midnight.js SDK. These packages handle the heavy lifting:
+
+| Package | Version | Purpose |
+|---|---|---|
+| `@midnight-ntwrk/midnight-js-indexer-public-data-provider` | `4.0.4` | On-chain state queries and streaming subscriptions |
+| `@midnight-ntwrk/midnight-js-contracts` | `4.0.4` | Contract deployment and calls |
+| `@midnight-ntwrk/midnight-js-types` | `4.0.4` | Shared TypeScript types |
+| `@midnight-ntwrk/midnight-js-fetch-zk-config-provider` | `4.0.4` | ZK config fetching |
+| `@midnight-ntwrk/midnight-js-level-private-state-provider` | `4.0.4` | Local private-state storage |
+| `@midnight-ntwrk/midnight-js-network-id` | `4.0.4` | Network identification helpers |
+| `@midnight-ntwrk/dapp-connector-api` | `4.0.1` | Wallet connector API |
+| `@midnight-ntwrk/compact-runtime` | `0.15.0` | Ledger deserialization |
+| `@midnight-ntwrk/ledger-v8` | `8.0.3` | Transaction serialization |
+| `react`, `react-dom`, `react-router-dom` | — | Frontend framework |
+| `zustand` | — | State management |
+
+Run `npm install` to install them automatically. See [`package.json`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/package.json) for the full list.
 
 ---
 
