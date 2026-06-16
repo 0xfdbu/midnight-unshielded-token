@@ -23,12 +23,12 @@ The finished project structure looks like this:
 ```text
 midnight-unshielded-token/
 ├── contracts/
-│   └── Contract.compact                 # Example unshielded token vault contract
+│   └── Contract.compact                 # Example unshielded token vault smart contract
 ├── scripts/
 │   └── go.ts                            # Deployment helper
 ├── src/
 │   ├── hooks/
-│   │   ├── useContractState.ts          # Real-time contract-state hook
+│   │   ├── useContractState.ts          # Real-time smart contract-state hook
 │   │   └── wallet/
 │   │       ├── wallet.constants.ts      # Indexer / network constants
 │   │       └── services/
@@ -78,7 +78,7 @@ Before you query anything, you need to know what you are querying.
 
 | Property | What's inside | How you access it |
 |---|---|---|
-| **`data`** | The contract's ledger state as a `ChargedState` object, including typed fields declared with `export ledger` in Compact | `contractModule.ledger(contractState.data)` |
+| **`data`** | The smart contract's ledger state as a `ChargedState` object, including typed fields declared with `export ledger` in Compact | `contractModule.ledger(contractState.data)` |
 | **`balance`** | A `Map<TokenType, bigint>` of tokens held by the smart contract | `contractState.balance` directly |
 
 View the full `ContractState` reference in the [Midnight documentation](https://docs.midnight.network/api-reference/onchain-runtime/classes/ContractState).
@@ -126,7 +126,7 @@ The provider contains useful methods for querying smart contract state:
 | `queryContractState(address)` | `ContractState` | You only need the smart contract's public ledger data |
 | `queryZSwapAndContractState(address)` | `[ZswapChainState, ContractState, LedgerParameters]` | You also need the global shielded state or parameters |
 | `queryUnshieldedBalances(address)` | `UnshieldedBalances` | You only need the smart contract's native token balances |
-| `contractStateObservable(address, config)` | `Observable<ContractState>` | You want push-driven updates when the contract changes |
+| `contractStateObservable(address, config)` | `Observable<ContractState>` | You want push-driven updates when the smart contract changes |
 
 `queryContractState`, `queryZSwapAndContractState`, and `queryUnshieldedBalances` accept an optional second argument to query at a specific block height or hash. `contractStateObservable` accepts a config such as `{ type: 'latest' }`, `{ type: 'blockHeight', blockHeight: 42 }`, or `{ type: 'blockHash', blockHash: '...' }`.
 
@@ -171,7 +171,7 @@ export async function getContractBalance(contractAddress: string, tokenId: strin
 }
 ```
 
-![Console output showing contract state balance logs](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/9u5v6y8fszo4xrjtv925.png)
+![Console output showing smart contract state balance logs](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/9u5v6y8fszo4xrjtv925.png)
 
 `contractState.balance` is a `Map<TokenType, bigint>` of token balances held by the smart contract. This is useful for a vault-type smart contract.
 
@@ -253,7 +253,7 @@ Your wallet holds many tokens. `0000...` represents native tNIGHT. Looking up wa
 
 Every token on Midnight has a unique color: a 32-byte hex string that identifies the token type on the ledger. You can see this color in the `[getUserTokenBalance] Raw balances:` log. The color is generated when the token is first minted, and it is not hardcoded in the smart contract source code.
 
-If you do not know the color yet, call `getContractFirstTokenBalance(contractAddress)`. It reads the contract's balance map and returns the first token held by the contract, without the need for hardcoding:
+If you do not know the color yet, call `getContractFirstTokenBalance(contractAddress)`. It reads the smart contract's balance map and returns the first token held by the smart contract, without the need for hardcoding:
 
 ```typescript
 export async function getContractFirstTokenBalance(contractAddress: string): Promise<{ tokenId: string; balance: bigint } | null> {
@@ -347,7 +347,7 @@ export function HomePage() {
 
 The hook returns `null` while loading, so the frontend does not crash and uses `?? 0n` as a fallback. The grid uses `grid-cols-2` on mobile and `grid-cols-4` on larger screens. The vault balance shows held burned tokens, so users know the raw balance includes burned tokens. 
 
-You can use this pattern with any other smart contract; all that changes are the ledger fields you deserialize and the token auto-detected from the contract's balance map.
+You can use this pattern with any other smart contract; all that changes are the ledger fields you deserialize and the token auto-detected from the smart contract's balance map.
 
 
 ![Dashboard showing four stat cards: Total Supply, Total Burned, Vault Balance, and Wallet Balance](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ddhtg8c5d28fyn4j7m06.png)
@@ -403,7 +403,7 @@ subscription = publicDataProvider
   });
 ```
 
-The `fetchState()` pattern is kept in this project's hook because the wallet balance is not part of the contract state observable, so one query per update is still needed to refresh all four stat cards.
+The `fetchState()` pattern is kept in this project's hook because the wallet balance is not part of the smart contract state observable, so one query per update is still needed to refresh all four stat cards.
 
 ### The `useContractState` hook
 
@@ -573,7 +573,7 @@ The hybrid approach used in `useContractState` is robust: it uses a background p
 
 You now have a complete pipeline for querying smart contract state from a React/TypeScript frontend on the Midnight network. The pattern is always the same: build an `indexerPublicDataProvider`, call the query method that works for your needs, deserialize the ledger state with your compiled smart contract's `ledger()` constructor, and render the fields in your UI.
 
-This is not limited to stablecoin vaults. Any smart contract that exposes `export ledger` fields can be queried the same way. You only need to change the ledger fields you choose to deserialize, for example `totalSupply` or `totalEmployees`, and the tokens auto-detected from the contract's balance map.
+This is not limited to stablecoin vaults. Any smart contract that exposes `export ledger` fields can be queried the same way. You only need to change the ledger fields you choose to deserialize, for example `totalSupply` or `totalEmployees`, and the tokens auto-detected from the smart contract's balance map.
 
 ---
 
@@ -582,7 +582,7 @@ This is not limited to stablecoin vaults. Any smart contract that exposes `expor
 Now that you've finished this tutorial, here are a few things you can do next:
 
 - Check the full repository [source code](https://github.com/0xfdbu/midnight-unshielded-token)
-- Deploy a hello-world contract and display ledger fields on a frontend
+- Deploy a hello-world smart contract and display ledger fields on a frontend
 - Read the Midnight Compact language docs
 - Understand `ContractState` from the [Midnight documentation](https://docs.midnight.network/api-reference/onchain-runtime/classes/ContractState)
 
