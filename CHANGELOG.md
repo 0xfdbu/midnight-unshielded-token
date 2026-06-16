@@ -6,8 +6,8 @@
 
 ## Source of comparison
 
-- **Old file:** `/home/user/Desktop/Wallet-connect/unshielded-token/states_tutorial.md` (monorepo subfolder)
-- **New file:** `/home/user/Desktop/Apps/midnight-unshielded-token/states_tutorial.md` (standalone repo)
+- **Old file:** `midnight-apps/unshielded-token/states_tutorial.md` (monorepo subfolder)
+- **New file:** `midnight-unshielded-token/states_tutorial.md` (standalone repo)
 - **Comparison generated with:** `diff -u old new`
 
 ## Word count comparison
