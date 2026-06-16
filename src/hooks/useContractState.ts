@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { INDEXER_HTTP, INDEXER_WS } from './wallet/wallet.constants';
+import { INDEXER_HTTP, INDEXER_WS, CONTRACT_PATH } from './wallet/wallet.constants';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import {
   getContractState,
@@ -87,8 +87,22 @@ export function useContractState(
       subscription = publicDataProvider
         .contractStateObservable(contractAddress, { type: 'latest' })
         .subscribe({
-          next: () => {
-            console.log('[useContractState] Observable: contract state changed, refetching');
+          next: async (contractState) => {
+            console.log('[useContractState] Observable: raw contractState emitted', contractState);
+            console.log('[useContractState] Observable: contractState.balance', contractState.balance);
+
+            try {
+              const contractModule = await import(CONTRACT_PATH + '/contract/index.js');
+              const ledgerState = contractModule.ledger(contractState.data);
+              console.log('[useContractState] Observable: deserialized ledger state', {
+                totalSupply: ledgerState.totalSupply.toString(),
+                totalBurned: ledgerState.totalBurned.toString(),
+                burnedBalance: ledgerState.burnedBalance.toString(),
+              });
+            } catch (e) {
+              console.error('[useContractState] Observable: failed to deserialize emitted contractState', e);
+            }
+
             fetchState();
           },
           error: (err) => {
