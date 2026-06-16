@@ -24,6 +24,20 @@
   - `react`, `react-dom`, `react-router-dom`
   - `zustand`
 
+> **Version note:** This tutorial was written against the following exact package versions. If you are on a different release, some return types may differ.
+>
+> | Package | Version |
+> |---|---|
+> | `@midnight-ntwrk/midnight-js-indexer-public-data-provider` | `4.0.4` |
+> | `@midnight-ntwrk/midnight-js-contracts` | `4.0.4` |
+> | `@midnight-ntwrk/midnight-js-types` | `4.0.4` |
+> | `@midnight-ntwrk/midnight-js-fetch-zk-config-provider` | `4.0.4` |
+> | `@midnight-ntwrk/midnight-js-level-private-state-provider` | `4.0.4` |
+> | `@midnight-ntwrk/midnight-js-network-id` | `4.0.4` |
+> | `@midnight-ntwrk/dapp-connector-api` | `4.0.1` |
+> | `@midnight-ntwrk/compact-runtime` | `0.15.0` |
+> | `@midnight-ntwrk/ledger-v8` | `8.0.3` |
+
 ## Summary
 
 This guide shows how to query and visualize deployed smart contract state from a React frontend on the Midnight network. You will learn how to use `indexerPublicDataProvider` for GraphQL queries, how to deserialize ledger state into typed fields, and how to render everything in the frontend.
@@ -181,6 +195,8 @@ export async function getZSwapAndContractState(contractAddress: string): Promise
 ```
 
 ![Console output showing ZSwap and ledger state logs](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/qf345p9hv00squdpgp6x.png)
+
+> **Tuple-shape note:** The destructuring `const [zswapState, contractState, ledgerParams] = result` returns three elements in `@midnight-ntwrk/midnight-js-indexer-public-data-provider` **4.0.4**. Some other versions type the return as a two-tuple `[ZswapChainState, ContractState]`. If you see a type error or runtime mismatch, adjust the destructuring to match your installed version.
 
 ---
 
@@ -512,7 +528,7 @@ ws.onmessage = (event) => {
 };
 ```
 
-> **Note:** `graphql-ws` expects a `connection_init` before `start`, so if you use `subscriptions-transport-ws` (older protocol), the handshake is slightly different. The Preprod indexer supports `graphql-ws`.
+> **Protocol note:** The raw code above uses the **legacy `subscriptions-transport-ws` protocol**. Its WebSocket subprotocol string is confusingly `graphql-ws`, and its message vocabulary is `connection_init`, `start`, `data`, `ka` (keep-alive), and `stop`. The modern `graphql-ws` library uses a different subprotocol, `graphql-transport-ws`, and message types such as `subscribe`, `next`, and `complete`. The Midnight indexer accepts the legacy protocol shown here, which is why the hand-rolled code works. If you use a different GraphQL client, make sure you match the protocol it expects.
 
 ---
 
