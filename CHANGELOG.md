@@ -404,7 +404,7 @@ Run the frontend with `npm run dev`.
 
 ---
 
-## 7. Style.md compliance — "smart contract" terminology
+## 7. Style.md compliance: smart contract terminology
 
 **Feedback / Style check:** `Style.md` requires "smart contract" instead of "contract" in prose.
 
