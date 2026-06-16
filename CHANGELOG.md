@@ -10,6 +10,18 @@
 - **New file:** `/home/user/Desktop/Apps/midnight-unshielded-token/states_tutorial.md` (standalone repo)
 - **Comparison generated with:** `diff -u old new`
 
+## Word count comparison
+
+Measured with `wc -w` (Unix word count), which counts whitespace-delimited tokens including code blocks, headings, and inline markup.
+
+| File | Word count |
+|---|---|
+| Old `unshielded-token/states_tutorial.md` | 2,893 |
+| New `midnight-unshielded-token/states_tutorial.md` | 3,133 |
+| **Difference** | **+240 words (+8.3%)** |
+
+The increase comes from the new Project setup section, the Dependencies/version table, the corrected protocol note, the direct `ContractState` usage snippet, and the expanded `contractStateObservable` explanations.
+
 ---
 
 ## 1. Fixed the core claim about `indexerPublicDataProvider`
