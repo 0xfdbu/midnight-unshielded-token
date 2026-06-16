@@ -427,37 +427,242 @@ Run the frontend with `npm run dev`.
 
 ---
 
-## 8. Source-code changes reflected in the tutorial
+## 8. Source-code changes
+
+The tutorial changes were backed by matching source-code changes. Only two source files ended up permanently different from the monorepo version; other files (e.g., `wallet.constants.ts`, `App.tsx`, `scripts/go.ts`) were temporarily switched between Preprod and Preview during testing and are now back to Preprod, matching the original monorepo state.
 
 ### `src/hooks/useContractState.ts`
 
-Refactored from raw WebSocket to `contractStateObservable`. The current version logs the emitted `ContractState` directly for verification:
+**Before:** Raw WebSocket subscription with manual reconnect, debounce, and cleanup.
 
 ```typescript
-next: async (contractState) => {
-  console.log('[useContractState] Observable: raw contractState emitted', contractState);
-  console.log('[useContractState] Observable: contractState.balance', contractState.balance);
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  INDEXER_WS,
+} from './wallet/wallet.constants';
+import {
+  getContractState,
+  getContractBalance,
+  getUserTokenBalance,
+} from './wallet/services/contractCalls';
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 
-  try {
-    const contractModule = await import(CONTRACT_PATH + '/contract/index.js');
-    const ledgerState = contractModule.ledger(contractState.data);
-    console.log('[useContractState] Observable: deserialized ledger state', {
-      totalSupply: ledgerState.totalSupply.toString(),
-      totalBurned: ledgerState.totalBurned.toString(),
-      burnedBalance: ledgerState.burnedBalance.toString(),
-    });
-  } catch (e) {
-    console.error('[useContractState] Observable: failed to deserialize emitted contractState', e);
-  }
+export function useContractState(
+  connectedApi: ConnectedAPI | null,
+  contractAddress: string | null,
+  selectedTokenId: string | null,
+  opts: { pollInterval?: number } = {}
+) {
+  // ... refs for wsRef, reconnectRef, lastBlockRef, intentionalCloseRef ...
 
-  fetchState();
+  // WebSocket subscription for push updates
+  useEffect(() => {
+    if (!connectedApi || !contractAddress) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectDelay = 1000;
+    const maxReconnectDelay = 30000;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const DEBOUNCE_MS = 500;
+
+    function connect() {
+      ws = new WebSocket(INDEXER_WS, 'graphql-ws');
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('[useContractState] Socket: connected');
+        reconnectDelay = 1000;
+        ws!.send(JSON.stringify({ type: 'connection_init' }));
+        ws!.send(JSON.stringify({
+          id: 'contract-state-sub',
+          type: 'start',
+          payload: {
+            query: `
+              subscription ContractStateUpdates($address: HexEncoded!) {
+                contractActions(address: $address) {
+                  state
+                  transaction { block { height } }
+                }
+              }
+            `,
+            variables: { address: contractAddress },
+          },
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'data' && msg.payload?.data?.contractActions) {
+            const action = msg.payload.data.contractActions;
+            const blockHeight = action.transaction?.block?.height;
+            if (blockHeight && blockHeight !== lastBlockRef.current) {
+              lastBlockRef.current = blockHeight;
+              if (debounceTimer) clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(() => {
+                console.log('[useContractState] Socket: debounced fetch for block', blockHeight);
+                fetchState();
+                debounceTimer = null;
+              }, DEBOUNCE_MS);
+            }
+          }
+          if (msg.type === 'ka') {
+            // Keep-alive, ignore
+          }
+        } catch (e) {
+          console.error('[useContractState] Failed to parse message:', e);
+        }
+      };
+
+      ws.onerror = (err) => {
+        if (ws && intentionalCloseRef.current.has(ws)) return;
+        console.error('[useContractState] WebSocket error:', err);
+      };
+
+      ws.onclose = () => {
+        if (ws && intentionalCloseRef.current.has(ws)) {
+          console.log('[useContractState] Socket: closed intentionally');
+          return;
+        }
+        console.log(`[useContractState] Socket: disconnected, reconnecting in ${reconnectDelay}ms...`);
+        if (reconnectRef.current) clearTimeout(reconnectRef.current);
+        reconnectRef.current = setTimeout(() => {
+          reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
+          connect();
+        }, reconnectDelay);
+      };
+    }
+
+    connect();
+
+    return () => {
+      if (reconnectRef.current) {
+        clearTimeout(reconnectRef.current);
+        reconnectRef.current = null;
+      }
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
+      }
+      if (ws) {
+        intentionalCloseRef.current.add(ws);
+        if (ws.readyState === WebSocket.OPEN) {
+          try { ws.send(JSON.stringify({ id: 'contract-state-sub', type: 'stop' })); } catch {}
+          ws.close();
+        }
+      }
+    };
+  }, [connectedApi, fetchState, contractAddress, selectedTokenId]);
+
+  return { state, loading, error, refetch: fetchState };
 }
 ```
 
-### Network configuration
+**After:** `contractStateObservable` from `indexerPublicDataProvider`, with direct logging of the emitted `ContractState`.
 
-- Source files and `scripts/go.ts` were migrated between Preprod and Preview during testing; the final committed state is **Preprod**.
-- `src/pages/Home.tsx`: the **View Source** link now points to the standalone repo (`https://github.com/0xfdbu/midnight-unshielded-token`).
+```typescript
+import { useState, useEffect, useCallback } from 'react';
+import { INDEXER_HTTP, INDEXER_WS, CONTRACT_PATH } from './wallet/wallet.constants';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import {
+  getContractState,
+  getContractBalance,
+  getUserTokenBalance,
+} from './wallet/services/contractCalls';
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { Subscription } from 'rxjs';
+
+export function useContractState(
+  connectedApi: ConnectedAPI | null,
+  contractAddress: string | null,
+  selectedTokenId: string | null,
+  opts: { pollInterval?: number } = {}
+) {
+  // ... no WebSocket refs needed ...
+
+  // Primary: indexer-backed contract state observable for push updates
+  useEffect(() => {
+    if (!contractAddress) {
+      setLoading(false);
+      return;
+    }
+
+    const publicDataProvider = indexerPublicDataProvider(INDEXER_HTTP, INDEXER_WS);
+    let subscription: Subscription;
+
+    try {
+      subscription = publicDataProvider
+        .contractStateObservable(contractAddress, { type: 'latest' })
+        .subscribe({
+          next: async (contractState) => {
+            console.log('[useContractState] Observable: raw contractState emitted', contractState);
+            console.log('[useContractState] Observable: contractState.balance', contractState.balance);
+
+            try {
+              const contractModule = await import(CONTRACT_PATH + '/contract/index.js');
+              const ledgerState = contractModule.ledger(contractState.data);
+              console.log('[useContractState] Observable: deserialized ledger state', {
+                totalSupply: ledgerState.totalSupply.toString(),
+                totalBurned: ledgerState.totalBurned.toString(),
+                burnedBalance: ledgerState.burnedBalance.toString(),
+              });
+            } catch (e) {
+              console.error('[useContractState] Observable: failed to deserialize emitted contractState', e);
+            }
+
+            fetchState();
+          },
+          error: (err) => {
+            console.error('[useContractState] Observable error:', err);
+          },
+        });
+    } catch (err: any) {
+      console.error('[useContractState] Failed to start observable:', err);
+      setError(err.message);
+      setLoading(false);
+      return;
+    }
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [contractAddress, fetchState]);
+
+  return { state, loading, error, refetch: fetchState };
+}
+```
+
+**Key differences:**
+- Removed all raw WebSocket refs, reconnect logic, debounce timer, and `intentionalCloseRef` WeakSet.
+- Added `indexerPublicDataProvider` and `Subscription` from `rxjs`.
+- Added `INDEXER_HTTP` import because the provider needs both HTTP and WS URLs.
+- Added `CONTRACT_PATH` import for deserializing the emitted `ContractState`.
+- The observable `next` handler now receives `contractState` and logs it raw, its balance, and its deserialized ledger fields before calling `fetchState()`.
+- Cleanup is a single `subscription?.unsubscribe()`.
+
+### `src/pages/Home.tsx`
+
+**Before:**
+
+```typescript
+<a
+  href="https://github.com/0xfdbu/midnight-apps/unshielded-token"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+```
+
+**After:**
+
+```typescript
+<a
+  href="https://github.com/0xfdbu/midnight-unshielded-token"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+```
+
+**Result:** The **View Source** button now points to the standalone repository.
 
 ### Screenshot update
 
