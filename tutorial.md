@@ -1,4 +1,4 @@
-# [Tutorial] Building an unshielded token DApp with UI on Midnight network
+# Building an unshielded token DApp with UI on Midnight network
 
 📁 **Full Source Code:** [midnight-unshielded-token](https://github.com/0xfdbu/midnight-unshielded-token)
 
