@@ -733,8 +733,9 @@ The following smaller changes were also made and are visible in the full `diff -
 
 After the initial refactor, the `tutorial.md` opening still had a long package list inside `## Prerequisites`, making it feel like a dump. It was restructured to match the cleaner layout used in `states_tutorial.md`:
 
+- Added `## Summary` with a short overview paragraph.
 - Added `## Project setup` with clone/install steps and a finished project structure tree.
 - Kept `## Prerequisites` short (Node.js, wallet, faucet tokens, deployed smart contract).
 - Moved all package details into a new `## Dependencies` section with a purpose column.
 
-**Result:** The deploy-and-run tutorial now starts with the same clear clone-and-follow path as the state-reading tutorial.
+**Result:** The deploy-and-run tutorial now starts with the same clear summary, clone-and-follow path, and dependencies table as the state-reading tutorial.

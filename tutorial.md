@@ -4,6 +4,10 @@
 
 **Target audience:** Developers
 
+## Summary
+
+This guide walks through building a React frontend for an unshielded token vault on the Midnight blockchain. You learn how to compile a Compact smart contract, deploy it from the browser, and build UI flows for minting, sending, receiving, and displaying token balances. The patterns apply to any unshielded token DApp that needs a browser-based dashboard.
+
 ## Project setup
 
 Start with the standalone repository:
