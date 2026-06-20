@@ -726,3 +726,15 @@ The following smaller changes were also made and are visible in the full `diff -
 
 - `Methodology.md` remains in the old monorepo only; standalone repos do not include it.
 - The raw WebSocket "Under the hood" section was kept because it accurately reflects the legacy protocol the Midnight indexer speaks.
+
+---
+
+## Note on `tutorial.md` front matter
+
+After the initial refactor, the `tutorial.md` opening still had a long package list inside `## Prerequisites`, making it feel like a dump. It was restructured to match the cleaner layout used in `states_tutorial.md`:
+
+- Added `## Project setup` with clone/install steps and a finished project structure tree.
+- Kept `## Prerequisites` short (Node.js, wallet, faucet tokens, deployed smart contract).
+- Moved all package details into a new `## Dependencies` section with a purpose column.
+
+**Result:** The deploy-and-run tutorial now starts with the same clear clone-and-follow path as the state-reading tutorial.

@@ -4,30 +4,75 @@
 
 **Target audience:** Developers
 
+## Project setup
+
+Start with the standalone repository:
+
+```bash
+git clone https://github.com/0xfdbu/midnight-unshielded-token.git
+cd midnight-unshielded-token
+npm install
+```
+
+The finished project structure looks like this:
+
+```text
+midnight-unshielded-token/
+├── contracts/
+│   └── Contract.compact              # Example unshielded token vault smart contract
+├── scripts/
+│   └── go.ts                         # Deployment helper
+├── src/
+│   ├── components/                   # React components
+│   ├── hooks/                        # Wallet hooks and smart contract calls
+│   ├── lib/                          # Utility code
+│   └── pages/                        # React pages (Home, Deploy, etc.)
+├── package.json
+├── states_tutorial.md                # Guide for reading smart contract state
+└── tutorial.md                       # This guide
+```
+
+Run the frontend with `npm run dev`.
+
 ## Prerequisites
 
 - Node.js installed (v20+)
 - A Midnight Wallet (e.g., 1AM or Lace)
 - Some Preprod [faucet](https://faucet.preprod.midnight.network/) NIGHT tokens
-- A [`package.json`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/package.json) with the needed packages
-  - `@midnight-ntwrk/compact-runtime`
-  - `@midnight-ntwrk/dapp-connector-api`
-  - `@midnight-ntwrk/ledger-v8`
-  - `@midnight-ntwrk/midnight-js-contracts`
-  - `@midnight-ntwrk/midnight-js-dapp-connector-proof-provider`
-  - `@midnight-ntwrk/midnight-js-fetch-zk-config-provider`
-  - `@midnight-ntwrk/midnight-js-indexer-public-data-provider`
-  - `@midnight-ntwrk/midnight-js-level-private-state-provider`
-  - `@midnight-ntwrk/midnight-js-network-id`
-  - `@midnight-ntwrk/midnight-js-node-zk-config-provider`
-  - `@midnight-ntwrk/midnight-js-types`
-  - `@midnight-ntwrk/wallet-sdk-dust-wallet`
-  - `@midnight-ntwrk/wallet-sdk-facade`
-  - `@midnight-ntwrk/wallet-sdk-hd`
-  - `@midnight-ntwrk/wallet-sdk-shielded`
-  - `@midnight-ntwrk/wallet-sdk-unshielded-wallet`
-  - `@scure/bip39`, `react`, `react-dom`, `react-router-dom`, `semver`, `vite-plugin-node-polyfills`, `vite-plugin-top-level-await`, `vite-plugin-wasm`, `ws`, `zustand`
+- A deployed Midnight smart contract (the repo includes one you can deploy, or you can use your own)
 
+## Dependencies
+
+The project builds on the Midnight.js SDK. These packages handle the heavy lifting:
+
+| Package | Purpose |
+|---|---|
+| `@midnight-ntwrk/compact-runtime` | Compact contract runtime |
+| `@midnight-ntwrk/dapp-connector-api` | Wallet connector API |
+| `@midnight-ntwrk/ledger-v8` | Transaction serialization |
+| `@midnight-ntwrk/midnight-js-contracts` | Contract deployment and calls |
+| `@midnight-ntwrk/midnight-js-dapp-connector-proof-provider` | Wallet-backed proof generation |
+| `@midnight-ntwrk/midnight-js-fetch-zk-config-provider` | ZK config fetching |
+| `@midnight-ntwrk/midnight-js-indexer-public-data-provider` | On-chain state queries |
+| `@midnight-ntwrk/midnight-js-level-private-state-provider` | Local private-state storage |
+| `@midnight-ntwrk/midnight-js-network-id` | Network identification helpers |
+| `@midnight-ntwrk/midnight-js-node-zk-config-provider` | Node ZK config provider |
+| `@midnight-ntwrk/midnight-js-types` | Shared TypeScript types |
+| `@midnight-ntwrk/wallet-sdk-dust-wallet` | Dust wallet SDK |
+| `@midnight-ntwrk/wallet-sdk-facade` | Wallet facade SDK |
+| `@midnight-ntwrk/wallet-sdk-hd` | HD wallet key derivation |
+| `@midnight-ntwrk/wallet-sdk-shielded` | Shielded wallet SDK |
+| `@midnight-ntwrk/wallet-sdk-unshielded-wallet` | Unshielded wallet SDK |
+| `@scure/bip39` | BIP-39 mnemonic handling |
+| `react`, `react-dom`, `react-router-dom` | Frontend framework |
+| `semver` | Semantic version parsing |
+| `vite-plugin-node-polyfills` | Node polyfills for Vite |
+| `vite-plugin-top-level-await` | Top-level await support for Vite |
+| `vite-plugin-wasm` | WASM support for Vite |
+| `ws` | WebSocket client |
+| `zustand` | State management |
+
+Run `npm install` to install them automatically. See [`package.json`](https://github.com/0xfdbu/midnight-unshielded-token/blob/main/package.json) for the full list.
 
 ![Wallet connection UI](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/iej2avrvzu0wic5jpmvq.png)
 
