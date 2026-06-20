@@ -56,7 +56,7 @@ The project builds on the Midnight.js SDK. These packages handle the heavy lifti
 | `@midnight-ntwrk/midnight-js-indexer-public-data-provider` | On-chain state queries |
 | `@midnight-ntwrk/midnight-js-level-private-state-provider` | Local private-state storage |
 | `@midnight-ntwrk/midnight-js-network-id` | Network identification helpers |
-| `@midnight-ntwrk/midnight-js-node-zk-config-provider` | Node ZK config provider |
+| `@midnight-ntwrk/midnight-js-node-zk-config-provider` | ZK config provider for Node.js (loads from local path) |
 | `@midnight-ntwrk/midnight-js-types` | Shared TypeScript types |
 | `@midnight-ntwrk/wallet-sdk-dust-wallet` | Dust wallet SDK |
 | `@midnight-ntwrk/wallet-sdk-facade` | Wallet facade SDK |
